@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
             bodySizeLimit: "8mb",
         },
     },
+    webpack: (config) => {
+        config.externals.push("pino", "thread-stream");
+        return config;
+    },
 };
 
 export default nextConfig;
