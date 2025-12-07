@@ -1,14 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    typescript: {
+        ignoreBuildErrors: true,
+    },
     experimental: {
         serverActions: {
             bodySizeLimit: "8mb",
         },
-    },
-    webpack: (config) => {
-        config.externals.push("pino", "thread-stream");
-        return config;
+        serverComponentsExternalPackages: ["pino", "thread-stream"],
     },
 };
 

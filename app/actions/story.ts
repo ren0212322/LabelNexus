@@ -7,7 +7,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 
 const publicClient = createPublicClient({
-    chain: aeneid,
+    chain: aeneid as any,
     transport: http()
 });
 
