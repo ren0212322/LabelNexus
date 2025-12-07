@@ -131,28 +131,7 @@ export default function Home() {
                         </CardContent>
                     </Card>
 
-                    {/* Step 2: Editor Tools */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Layers className="w-5 h-5" />
-                                Editor
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-2">
-                                <Button variant="outline" onClick={addText} className="gap-2 justify-start">
-                                    <Type className="w-4 h-4" /> Add Text
-                                </Button>
-                                <Button variant="outline" className="gap-2 justify-start" disabled>
-                                    <Sticker className="w-4 h-4" /> Add Sticker
-                                </Button>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                Tip: Drag to move, pinch/wheel to resize. Double click text to edit (not implemented in this v0).
-                            </p>
-                        </CardContent>
-                    </Card>
+
 
                     {/* Step 3: Registration */}
                     <Card className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-900/10">

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge"; // I might need to add badge if I missed it, or use custom
+import { useWallet } from "@/hooks/useWallet";
 import { Wallet } from "lucide-react";
 
 export function Navbar() {
+    const { address, connect, isConnecting } = useWallet();
     return (
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
             <div className="container flex h-16 items-center justify-between">
@@ -27,10 +29,19 @@ export function Navbar() {
                         Story Odyssey
                     </div>
 
-                    <Button variant="outline" className="gap-2">
-                        <Wallet className="w-4 h-4" />
-                        Connect Wallet
-                    </Button>
+                    {address ? (
+                        <div className="flex flex-col items-end">
+                            <div className="text-xs text-muted-foreground mr-1">Connected</div>
+                            <div className="font-mono text-xs border px-2 py-1 rounded bg-muted">
+                                {address.slice(0, 6)}...{address.slice(-4)}
+                            </div>
+                        </div>
+                    ) : (
+                        <Button variant="outline" className="gap-2" onClick={connect} disabled={isConnecting}>
+                            <Wallet className="w-4 h-4" />
+                            {isConnecting ? "Connecting..." : "Connect Wallet"}
+                        </Button>
+                    )}
                 </div>
             </div>
         </nav>
