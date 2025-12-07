@@ -1,60 +1,85 @@
-# MemeStory
-### Powered by Story Protocol
+# 🍌 MemeStory  
+**Built on Story Protocol**  
+*Contract: `0x548709a2e4ff648378Ed485a02E4BB2f4378EBA3`*
 
-**Create your meme and earn royalty - Register as IP**
+Turn your memes into programmable IP that pays you.  
+AI-generated → auto-uploaded to Pinata → on-chain IP → auto-royalties → remix-to-earn.
 
-**MEME Token Contract:** `0x548709a2e4ff648378Ed485a02E4BB2f4378EBA3`
+---
 
-MemeStory is an AI-powered platform for creating, remixing, and registering memes as IP Assets on the Story Protocol.
+## ⚡ One-liner  
+Create a killer meme in 5 seconds → we pin it to IPFS (Pinata) → register it as an IP Asset → earn every time it’s remixed or shared.  
+No lawyers. No middle-men. Just jokes that compound.
 
-## Features
+---
 
-- **AI Generation**: Create hilarious memes instantly from text prompts using Google Gemini 2.0 Flash.
-- **Canvas Editor**: Drag, drop, and edit text on your memes.
-- **Story Protocol Integration**: Register your creations as IP Assets on the Aeneid Testnet.
-- **RainbowKit & Wagmi**: seamless wallet connection experience.
-- **Responsive Design**: Works on desktop and mobile.
+## 🚀 Why MemeStory?
 
-## Tech Stack
+| Web2 Memes | MemeStory Memes |
+|------------|-----------------|
+| Post → pray for likes | Post → mint → earn |
+| Stolen = zero credit | Remixed = automatic royalty |
+| JPEG dead-end | Programmable IP asset |
+| 0 monetisation tools | Liquidity, licensing, DeFi collateral |
 
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Components**: Shadcn UI
-- **AI Model**: Gemini 2.0 Flash Experimental
-- **Blockchain**: Story Protocol SDK, Viem, Wagmi, RainbowKit
+---
 
-## Getting Started
+## 🌟 Features That Print Money
 
-1.  **Clone the repository**:
-    ```bash
-    git clone https://github.com/your-repo/memestory.git
-    cd memestory
-    ```
+| Feature | Benefit | Web3 Magic |
+|---------|---------|------------|
+| **AI Generator** (`Gemini 2.0 Flash`) | Type a punch-line → meme appears in <3 s | Gas-less, off-chain, unlimited retries |
+| **One-Click Mint** | Wallet pops up → tx → you own an IP-ID | Story Protocol test-net (main-net soon) |
+| **Canvas Editor** | Drag, drop, resize, add stickers | Export 1080×1080 ready for every social algo |
+| **Fair-Remix Engine** | Anyone can remix → original author auto-paid | Programmable IP License (PIL) hard-coded |
+| **Pinata Upload** | Media stored permanently on IPFS | Hassle-free, no IPFS node required |
+| **Royalty Dashboard** | Real-time $MEME balance, splits, attribution graph | Chain-data = transparent & auditable |
+| **Mobile First** | iPhone / Android / Metamask app browser | PWA installable, share sheet native |
+| **Zero-Fee L2** | Aeneid test-net = no real $ gas | Main-net will use Story L1 (<0.01 $ per mint) |
 
-2.  **Install dependencies**:
-    ```bash
-    bun install
-    # or
-    npm install
-    ```
+---
 
-3.  **Set up Environment Variables**:
-    Create a `.env` file in the root directory:
-    ```env
-    GEMINI_API_KEY=your_gemini_api_key_here
-    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id_here
-    ```
+## 💸 Monetisation Streams
 
-4.  **Run the development server**:
-    ```bash
-    bun run dev
-    # or
-    npm run dev
-    ```
+1. **Viral Remix Royalties**  
+   5 % default fee → if your meme spawns 1 000 remises you still earn.
 
-5.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+2. **Commercial License Marketplace** (coming)  
+   Sell ad-licenses to brands who want to use your meme in campaigns.
 
-## License
+3. **IP-Token Vaults** (coming)  
+   Stake your IP-ID → borrow stablecoins against future royalty cash-flow.
 
-MIT
+4. **Airdrops**  
+   Early creators (now!) will receive retroactive $STORY & $MEME rewards at TGE.
+
+---
+
+## 🎮 How it Works (30 s flow)
+
+1. Connect wallet (RainbowKit)  
+2. Type prompt → “coping cat that bought the top”  
+3. AI → meme appears → edit text / place banana sticker  
+4. Hit “Mint IP” → media auto-uploaded to Pinata → IP-ID minted to your wallet  
+5. Share anywhere → every remix = $MEME in your dashboard
+
+---
+
+## 🧪 Live Demo
+
+🖥️ **Web**: [https://meme-story-tau.vercel.app](https://meme-story-tau.vercel.app)  
+📱 **PWA**: Add to home-screen for native feel  
+🌐 **Test-net**: Aeneid (zero real cost)
+
+---
+
+## 🧰 Developer? Fork & Build
+
+```bash
+git clone https://github.com/manjeetsharma0796/MemeStory
+cd memestory
+bun install                 # or npm
+cp .env.example .env        # add GEMINI_API_KEY + WALLET_CONNECT_ID + PINATA_JWT
+bun run dev                 # http://localhost:3000
+```
+Stack: Next.js 16 | TypeScript | Tailwind | shadcn/ui | Wagmi | Story SDK | Pinata | Gemini 2.0 Flash
