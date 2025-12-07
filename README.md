@@ -1,67 +1,55 @@
-# Story TypeScript SDK Examples
+# MemeStory 🍌
 
-## Get Started
+MemeStory is an AI-powered platform for creating, remixing, and registering memes as IP Assets on the Story Protocol.
 
-1. Install the dependencies:
+## Features
 
+- **AI Generation**: Create hilarious memes instantly from text prompts using Google Gemini 2.0 Flash.
+- **Canvas Editor**: Drag, drop, and edit text on your memes.
+- **Story Protocol Integration**: Register your creations as IP Assets on the Aeneid Testnet.
+- **RainbowKit & Wagmi**: seamless wallet connection experience.
+- **Responsive Design**: Works on desktop and mobile.
+
+## Tech Stack
+
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Components**: Shadcn UI
+- **AI Model**: Gemini 2.0 Flash Experimental
+- **Blockchain**: Story Protocol SDK, Viem, Wagmi, RainbowKit
+
+## Getting Started
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-repo/memestory.git
+    cd memestory
     ```
+
+2.  **Install dependencies**:
+    ```bash
+    bun install
+    # or
     npm install
     ```
 
-2. Rename the `.env.example` file to `.env`
-
-3. Add your Story Network Testnet wallet's private key to `.env` file:
-
-    ```
-    WALLET_PRIVATE_KEY=<your_wallet_private_key>
-    ```
-
-4. [REQUIRED FOR `register` and `register-custom` SCRIPTS] Go to [Pinata](https://pinata.cloud/) and create a new API key. Add the JWT to your `.env` file:
-
-    ```
-    PINATA_JWT=<your_pinata_jwt>
+3.  **Set up Environment Variables**:
+    Create a `.env` file in the root directory:
+    ```env
+    GEMINI_API_KEY=your_gemini_api_key_here
+    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id_here
     ```
 
-5. [OPTIONAL] We have already configured a public SPG NFT collection for you (`0xc32A8a0FF3beDDDa58393d022aF433e78739FAbc`). If you want to create your own collection for your IPs, create a new SPG NFT collection by running `npm run create-spg-collection` in your terminal.
-
-    3a. Look at the console output, and copy the NFT contract address. Add that value as `SPG_NFT_CONTRACT_ADDRESS` to your `.env` file:
-
+4.  **Run the development server**:
+    ```bash
+    bun run dev
+    # or
+    npm run dev
     ```
-    SPG_NFT_CONTRACT_ADDRESS=<your_spg_nft_contract_address>
-    ```
 
-    **NOTE: You will only have to do this one time. Once you create an SPG collection, you can run this script as many times as you'd like.**
+5.  Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Available Scripts
+## License
 
-Below are all of the available scripts to help you build on Story.
-
-### Registration
-
--   `register`: This mints an NFT and registers it in the same transaction, using a public SPG collection.
--   `register-custom`: This mints an NFT using a custom ERC-721 contract and then registers it in a separate transaction.
-
-### Licenses
-
--   `mint-license`: Mints a license token from an IP Asset.
--   `limit-license`: Registers a new IP and attaches license terms that only allow you to mint 1 license token. This is an example for limiting the amount of licenses you can mint.
-
-### Royalty
-
--   `pay-revenue`: This is an example of registering a derivative, paying the derivative, and then allowing derivative and parent to claim their revenues.
--   `license-revenue`: This is an example of registering a derivative, minting a paid license from the derivative, and then allowing derivative and parent to claim their revenues.
--   `transfer-royalty-tokens`: This shows you how to transfer Royalty Tokens from an IP Account to any external wallet. Royalty Tokens are used to claim a % of revenue from an IP Asset.
-
-### Derivative
-
--   `derivative-commercial`: This mints an NFT and registers it as a derivative of an IP Asset in the same transaction, using a public SPG collection. It costs 1 $WIP to register as derivative and also includes an example of the parent claiming its revenue.
--   `derivative-non-commercial`: This mints an NFT and registesr it as a derivative of an IP Asset in the same transaction, using a public SPG collection. It's free to register as derivative.
--   `derivative-commercial-custom`: This mints an NFT using a custom ERC-721 contract and then registers it as a derivative of an IP Asset in a separate transaction. It costs 1 $WIP to register as derivative and also includes an example of the parent claiming its revenue.
-
-### Dispute
-
--   `dispute`: This disputes an IP Asset.
-
-### Misc
-
--   `send-raw-transaction`: An example of sending a transaction using viem's `encodeFunctionData`.
+MIT

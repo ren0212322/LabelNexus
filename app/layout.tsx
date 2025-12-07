@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -22,7 +24,9 @@ export default function RootLayout({
                 "min-h-screen bg-background font-sans antialiased",
                 inter.variable
             )}>
-                {children}
+                <Providers>
+                    {children}
+                </Providers>
                 <Toaster />
             </body>
         </html>
