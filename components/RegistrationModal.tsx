@@ -96,7 +96,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentIpI
         try {
             const newCollection = await storyClient.nftClient.createNFTCollection({
                 name: prevText,
-                symbol: "MEME",
+                symbol: "LNX",
                 isPublicMinting: true,
                 mintOpen: true,
                 contractURI: "ipfs://QmTeLVjM6Ney29mgCh75BWATC6hsxiyGKnbkUM3K1ZNNja",
