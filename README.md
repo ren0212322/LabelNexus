@@ -1,4 +1,12 @@
 # 🧬 LabelNexus
+**Project Name:** LabelNexus
+**Network:** Story Aeneid Testnet
+**Contract Address:** `0xA169D950bdAb93Ae8c168f87a207A1120dB5E1cF`
+**Token Symbol:** LNX
+
+---
+
+
 **Decentralized Data Labeling via Story Protocol**
 
 LabelNexus isn’t just “another labeling platform.” It is solving three decades of broken incentives in AI dataset creation — using programmable IP, on-chain attribution, and decentralized provenance.
