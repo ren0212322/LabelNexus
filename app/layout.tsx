@@ -4,6 +4,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
 import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -28,6 +29,7 @@ export default function RootLayout({
                     {children}
                 </Providers>
                 <Toaster />
+                <SonnerToaster />
             </body>
         </html>
     );

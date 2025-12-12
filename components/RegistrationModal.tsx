@@ -13,6 +13,7 @@ import { StoryClient, StoryConfig, PILFlavor, WIP_TOKEN_ADDRESS, LicenseTerms } 
 import { custom, parseEther } from "viem";
 import { uploadToPinata, uploadJSONToPinata } from "@/app/actions/story";
 import { generateMemeDescription } from "@/app/actions/gemini";
+import { toast } from "sonner";
 
 interface RegistrationModalProps {
     isOpen: boolean;
@@ -210,6 +211,20 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentIpI
 
             if (parentIpId && parentLicenseTermsId) {
                 // Register as Derivative
+                console.log("Action: Registering Derivative IP...");
+                txResponse = await storyClient.ipAsset.registerDerivativeIpAsset({
+                    nft: { type: 'mint', spgNftContract: collectionAddress as `0x${string}` },
+                    derivData: {
+                        parentIpIds: [parentIpId as `0x${string}`],
+                        licenseTermsIds: [parentLicenseTermsId]
+                    },
+                    ipMetadata: {
+                        ipMetadataURI,
+                        ipMetadataHash: `0x${'0'.repeat(64)}`,
+                        nftMetadataURI,
+                        nftMetadataHash: `0x${'0'.repeat(64)}`
+                    }
+                });
             } else {
                 // Regular Registration
                 console.log("Action: Registering New IP...");
@@ -225,6 +240,10 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentIpI
                 });
             }
 
+            if (!txResponse) {
+                throw new Error("Transaction failed: No response from SDK");
+            }
+
             if (txResponse.txHash) {
                 setTxHash(txResponse.txHash);
                 console.log("=====================IP ID:", txResponse.ipId);
@@ -238,7 +257,9 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentIpI
 
         } catch (e: any) {
             console.error(e);
-            setErrorMessage(e.message || "An error occurred");
+            const msg = e.message || "An error occurred";
+            setErrorMessage(msg);
+            toast.error(msg);
             setStatus("error");
         }
     };

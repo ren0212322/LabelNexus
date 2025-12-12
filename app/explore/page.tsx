@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useWallet } from "@/hooks/useWallet";
-import { StoryClient, StoryConfig } from "@story-protocol/core-sdk";
-import { custom } from "viem";
-import { Loader2, Search, FileSignature, GitFork } from "lucide-react";
+import { StoryClient, StoryConfig, aeneid } from "@story-protocol/core-sdk";
+import { custom, createPublicClient, http } from "viem";
+import { Loader2, Search, FileSignature, GitFork, RefreshCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
+
+const LICENSE_REGISTRY = "0x529a750E02d8E2f15649c13D69a465286a780e24";
 
 export default function ExplorePage() {
     const { address, client: walletClient } = useWallet();
@@ -20,6 +22,7 @@ export default function ExplorePage() {
 
     const [ipId, setIpId] = useState("");
     const [licenseTermsId, setLicenseTermsId] = useState("1"); // Default to 1 (usually Non-Commercial)
+    const [isFetchingTerms, setIsFetchingTerms] = useState(false);
 
     // Mint License State
     const [isMinting, setIsMinting] = useState(false);
@@ -32,6 +35,86 @@ export default function ExplorePage() {
             transport: custom(window.ethereum),
             chainId: "aeneid",
         });
+    };
+
+    const handleFetchLicenseTerms = async () => {
+        if (!ipId) {
+            toast({ title: "Missing IP ID", description: "Please enter an IP Address first.", variant: "destructive" });
+            return;
+        }
+
+        setIsFetchingTerms(true);
+        try {
+            const publicClient = createPublicClient({
+                chain: aeneid,
+                transport: http("https://aeneid.storyrpc.io"),
+            });
+
+            console.log("Fetching license terms for:", ipId);
+
+            // Get count of attached license terms
+            const count = await publicClient.readContract({
+                address: LICENSE_REGISTRY,
+                abi: [{
+                    name: "getAttachedLicenseTermsCount",
+                    type: "function",
+                    inputs: [{ name: "ipId", type: "address" }],
+                    outputs: [{ type: "uint256" }],
+                    stateMutability: "view",
+                }],
+                functionName: "getAttachedLicenseTermsCount",
+                args: [ipId as `0x${string}`],
+            }) as bigint;
+
+            console.log(`License terms count: ${count}`);
+
+            if (Number(count) === 0) {
+                toast({ title: "No Terms Found", description: "This IP has no attached license terms.", variant: "warning" });
+                return;
+            }
+
+            // Get all terms
+            const terms = [];
+            for (let i = 0; i < Number(count); i++) {
+                const result = await publicClient.readContract({
+                    address: LICENSE_REGISTRY,
+                    abi: [{
+                        name: "getAttachedLicenseTerms",
+                        type: "function",
+                        inputs: [
+                            { name: "ipId", type: "address" },
+                            { name: "index", type: "uint256" },
+                        ],
+                        outputs: [
+                            { name: "licenseTemplate", type: "address" },
+                            { name: "licenseTermsId", type: "uint256" },
+                        ],
+                        stateMutability: "view",
+                    }],
+                    functionName: "getAttachedLicenseTerms",
+                    args: [ipId as `0x${string}`, BigInt(i)],
+                }) as [string, bigint];
+
+                console.log(`Term [${i}]: Template ${result[0]}, ID ${result[1]}`);
+                terms.push(result[1]);
+            }
+
+            if (terms.length > 0) {
+                const foundId = terms[0].toString();
+                setLicenseTermsId(foundId);
+                toast({
+                    title: "Terms Found",
+                    description: `Found ${terms.length} term(s). Auto-selected ID: ${foundId}`,
+                    className: "bg-green-600 text-white"
+                });
+            }
+
+        } catch (e: any) {
+            console.error("Failed to fetch terms:", e);
+            toast({ title: "Fetch Failed", description: e.message || "Could not fetch license terms.", variant: "destructive" });
+        } finally {
+            setIsFetchingTerms(false);
+        }
     };
 
     const handleMintLicense = async () => {
@@ -109,12 +192,23 @@ export default function ExplorePage() {
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>IP Asset ID</Label>
-                                <Input
-                                    placeholder="0x..."
-                                    value={ipId}
-                                    onChange={(e) => setIpId(e.target.value)}
-                                    className="font-mono"
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="0x..."
+                                        value={ipId}
+                                        onChange={(e) => setIpId(e.target.value)}
+                                        className="font-mono"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleFetchLicenseTerms}
+                                        disabled={isFetchingTerms || !ipId}
+                                        title="Check for License Terms"
+                                    >
+                                        {isFetchingTerms ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                                    </Button>
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label>License Terms ID</Label>
