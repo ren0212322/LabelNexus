@@ -1,83 +1,99 @@
-# 🍌 MemeStory  
-**Built on Story Protocol**  
-*MEME Token Contract: `0x548709a2e4ff648378Ed485a02E4BB2f4378EBA3`*
+# 🧬 LabelNexus
+**Decentralized Data Labeling via Story Protocol**
 
-Turn your memes into programmable IP that pays you.  
-AI-generated → auto-uploaded to Pinata → on-chain IP → auto-royalties → remix-to-earn.
+LabelNexus isn’t just “another labeling platform.” It is solving three decades of broken incentives in AI dataset creation — using programmable IP, on-chain attribution, and decentralized provenance.
 
----
-
-## ⚡ One-liner  
-Create a killer meme in 5 seconds → we pin it to IPFS (Pinata) → register it as an IP Asset → earn every time it’s remixed or shared.  
-No lawyers. No middle-men. Just jokes that compound.
+### ⚡ One-liner
+**Data points as IP. Labelers as owners. Datasets as programmable assets.**
 
 ---
 
-## 🚀 Why MemeStory?
+## ⭐ Unique Aspects of LabelNexus
 
-| Web2 Memes | MemeStory Memes |
-|------------|-----------------|
-| Post → pray for likes | Post → mint → earn |
-| Stolen = zero credit | Remixed = automatic royalty |
-| JPEG dead-end | Programmable IP asset |
-| 0 monetisation tools | Liquidity, licensing, DeFi collateral |
+Below are the unique and transformational innovations that make LabelNexus stand out:
+
+### 🧩 1. Turning Data Labelers Into IP Owners (Industry First)
+Traditional labeling platforms treat humans as mechanical workers. Once a label is added, the work disappears into a private dataset, and the labeler gets no credit or upside.
+
+**LabelNexus flips this model completely:**
+- Every labeled image becomes an **IP Asset**.
+- Registered on-chain through **Story Protocol**.
+- **Labeler = verifiable IP owner**, not the corporation.
+- Future AI/AGI trained on this dataset must respect provenance and license terms.
+
+This introduces the **atomization of datasets into on-chain IP units**, something no other data-labeling platform offers.
+
+### 🔗 2. Inventing “Data Remixing” for the First Time Ever
+Data labeling has never had remix culture — unlike code, music, or art.
+
+**LabelNexus enables true dataset remixing:**
+- Add missing labels, improve semantic accuracy, or reorganize datasets.
+- Create **derivative datasets**.
+- **Automatic attribution** to original creators.
+
+This is the **GitHub Fork model for training data** — enabling quality to emerge through community refinement instead of centralized curation.
+
+### 💰 3. Monetizable Dataset Licensing (AI’s Biggest Missing Link)
+Today, dataset licensing is messy, offline, and legally unclear.
+
+**LabelNexus solves this with:**
+- **On-chain PIL (Programmable IP Licenses)**.
+- Ready-to-mint commercial or non-commercial licenses.
+- Instantly verifiable license terms.
+- AI labs can buy dataset rights in one click.
+
+This unlocks clean, lawful, scalable data procurement — the #1 bottleneck for ethical AI training.
+
+### 🛡️ 4. Built-In Provenance, Attribution & Usage Traceability
+Because LabelNexus uses Story Protocol:
+- Every dataset has a verifiable origin.
+- Every remix has attribution rules baked in.
+- Every license defines how the dataset can be used.
+
+LabelNexus creates a migration toward **consent-based, transparent, accountable AI datasets**.
+
+### 🤝 5. Solving the AI Labor Problem with Fair, Sustainable Rewards
+Labeling is often exploitative. LabelNexus transforms labelers from gig workers into **stakeholders**:
+> Label → IP → Licensed → Revenue stream
+
+If a LabelNexus dataset becomes valuable for robotics, self-driving, or LLM fine-tuning, the creator **earns forever**.
+
+### 🧠 6. A New Standard for Permissioned, High-Quality AI Training Data
+LabelNexus becomes the marketplace for clean, rights-respectful training data. It replaces internet scraping and synthetic data with:
+- ✔ Transparent provenance
+- ✔ Community auditing
+- ✔ Programmable licensing
+- ✔ High-quality, human-labeled data
+
+### 🌍 7. Global, Open, Sovereign Dataset Infrastructure
+LabelNexus establishes a **sovereign data economy powered by human intelligence**.
+
+| Traditional Systems | LabelNexus |
+| :--- | :--- |
+| Centralized ownership | **Decentralized ownership** |
+| No provenance | **On-chain traceability** |
+| Exploited labor | **Fair attribution + rewards** |
+| Black-box datasets | **Open, remixable datasets** |
+| No clarity on usage | **Programmable legal terms** |
 
 ---
 
-## 🌟 Features That Print Money
+## 🚀 In Simple Words
+LabelNexus transforms data labeling — one of the world’s most undervalued tasks — into:
+1. An **ownership economy**
+2. A **traceable contribution to AI**
+3. A **renewable revenue source**
+4. A **transparent IP asset class**
 
-| Feature | Benefit | Web3 Magic |
-|---------|---------|------------|
-| **AI Generator** (`Gemini 2.0 Flash`) | Type a punch-line → meme appears in <3 s | Gas-less, off-chain, unlimited retries |
-| **One-Click Mint** | Wallet pops up → tx → you own an IP-ID | Story Protocol test-net (main-net soon) |
-| **Canvas Editor** | Drag, drop, resize, add stickers | Export 1080×1080 ready for every social algo |
-| **Fair-Remix Engine** | Anyone can remix → original author auto-paid | Programmable IP License (PIL) hard-coded |
-| **Pinata Upload** | Media stored permanently on IPFS | Hassle-free, no IPFS node required |
-| **Royalty Dashboard** | Real-time $MEME balance, splits, attribution graph | Chain-data = transparent & auditable |
-| **Mobile First** | iPhone / Android / Metamask app browser | PWA installable, share sheet native |
-| **Zero-Fee L2** | Aeneid test-net = no real $ gas | Main-net will use Story L1 (<0.01 $ per mint) |
-
----
-
-## 💸 Monetisation Streams
-
-1. **Viral Remix Royalties**  
-   5 % default fee → if your meme spawns 1 000 remises you still earn.
-
-2. **Commercial License Marketplace** (coming)  
-   Sell ad-licenses to brands who want to use your meme in campaigns.
-
-3. **IP-Token Vaults** (coming)  
-   Stake your IP-ID → borrow stablecoins against future royalty cash-flow.
-
-4. **Airdrops**  
-   Early creators (now!) will receive retroactive $STORY & $MEME rewards at TGE.
-
----
-
-## 🎮 How it Works (30 s flow)
-
-1. Connect wallet (RainbowKit)  
-2. Type prompt → “coping cat that bought the top”  
-3. AI → meme appears → edit text / place banana sticker  
-4. Hit “Mint IP” → media auto-uploaded to Pinata → IP-ID minted to your wallet  
-5. Share anywhere → every remix = $MEME in your dashboard
-
----
-
-## 🧪 Live Demo
-
-🖥️ **Web**: [https://meme-story-tau.vercel.app](https://meme-story-tau.vercel.app)  
-📱 **PWA**: Add to home-screen for native feel  
-🌐 **Test-net**: Aeneid (zero real cost)
+Nobody else is doing this — and Story Protocol makes it possible.
 
 ---
 
 ## 🧰 Developer? Fork & Build
 
 ```bash
-git clone https://github.com/manjeetsharma0796/MemeStory
-cd memestory
+git clone https://github.com/manjeetsharma0796/LabelNexus
+cd labelnexus
 bun install                 # or npm
 cp .env.example .env        # add GEMINI_API_KEY + WALLET_CONNECT_ID + PINATA_JWT
 bun run dev                 # http://localhost:3000

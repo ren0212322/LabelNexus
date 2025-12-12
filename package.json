@@ -1,7 +1,7 @@
 {
-    "name": "label-human",
+    "name": "label-nexus",
     "version": "1.0.0",
-    "description": "Collaborative Data Labeling Platform on Story Protocol",
+    "description": "Decentralized Data Labeling on Story Protocol",
     "main": "index.js",
     "scripts": {
         "dev": "next dev",
