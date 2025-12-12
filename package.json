@@ -1,7 +1,7 @@
 {
-    "name": "my-story-protocol-example-beta",
+    "name": "label-human",
     "version": "1.0.0",
-    "description": "",
+    "description": "Collaborative Data Labeling Platform on Story Protocol",
     "main": "index.js",
     "scripts": {
         "dev": "next dev",

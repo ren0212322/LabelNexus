@@ -4,21 +4,22 @@ import { useState, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Layers, Wand2, Download, Loader2 } from "lucide-react";
-import { generateMemeImage } from "@/app/actions/gemini";
+import { Upload, Download, Loader2, Save, Type, ScanFace } from "lucide-react";
 import { RegistrationModal } from "@/components/RegistrationModal";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { MEME_TOKEN_ADDRESS, MEME_TOKEN_ABI } from "@/app/constants/memeToken";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-const MemeCanvas = dynamic(() => import("@/components/MemeCanvas").then(mod => mod.MemeCanvas), {
+// Dynamically import Canvas to avoid SSR issues with Konva
+const LabelCanvas = dynamic(() => import("@/components/LabelCanvas").then(mod => mod.LabelCanvas), {
     ssr: false,
-    loading: () => <div className="w-full h-full flex items-center justify-center bg-slate-100"><Loader2 className="animate-spin text-muted-foreground" /></div>
+    loading: () => <div className="w-full h-full flex items-center justify-center bg-slate-900 border border-slate-800 rounded-lg"><Loader2 className="animate-spin text-purple-500" /></div>
 });
 
 export default function CreatePage() {
@@ -31,145 +32,52 @@ export default function CreatePage() {
 
 function CreateContent() {
     const { isConnected } = useAccount();
-    const searchParams = useSearchParams();
-    const parentContract = searchParams.get('parentContract');
-    const parentTokenId = searchParams.get('parentTokenId');
-    const parentImage = searchParams.get('parentImage');
-
-    const [prompt, setPrompt] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
     const [imageUrl, setImageUrl] = useState<string>("");
-    const [texts, setTexts] = useState<Array<any>>([]);
-    const [selectedId, selectText] = useState<string | null>(null);
 
+    // Labeling State
+    const [labels, setLabels] = useState<Array<{ id: string, x: number, y: number, label: string }>>([]);
+    const [pendingLabel, setPendingLabel] = useState<{ x: number, y: number } | null>(null);
+    const [labelInput, setLabelInput] = useState("");
+    const [isLabelDialogOpen, setIsLabelDialogOpen] = useState(false);
+
+    // Registration Modal
     const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
     const [imageToRegister, setImageToRegister] = useState("");
 
     const stageRef = useRef<any>(null);
-
-    useEffect(() => {
-        if (parentImage) {
-            setImageUrl(parentImage);
-        }
-    }, [parentImage]);
-
     const { toast } = useToast();
-    const { address } = useAccount();
 
-    const [isPaying, setIsPaying] = useState(false);
-    const { data: hash, isPending: isTxPending, writeContract } = useWriteContract();
-    const { isLoading: isConfirming, isSuccess: isTxSuccess } = useWaitForTransactionReceipt({
-        hash,
-    });
-
-    const BURN_ADDRESS = "0x83A1d9D264199A918D43C97D220e70317A2dE744";
-    const PAYMENT_AMOUNT = BigInt(5 * 10 ** 18); // 5 MEME
-
-    const { data: balanceData } = useReadContract({
-        address: MEME_TOKEN_ADDRESS as `0x${string}`,
-        abi: MEME_TOKEN_ABI,
-        functionName: 'balanceOf',
-        args: address ? [address] : undefined,
-        query: {
-            enabled: !!address,
-        }
-    });
-
-    // Watch for payment success to trigger generation
-    useEffect(() => {
-        if (isTxSuccess) {
-            toast({
-                title: "Payment Confirmed! 💸",
-                description: "Starting AI generation...",
-            });
-            setIsPaying(false);
-            performGeneration();
-        }
-    }, [isTxSuccess]);
-
-    const handleGenerate = async () => {
-        if (!prompt || !address) {
-            if (!address) toast({ title: "Wallet not connected", variant: "destructive", description: "Please connect your wallet to pay and generate." });
-            return;
-        }
-
-        const balance = balanceData ? BigInt(balanceData) : BigInt(0);
-        if (balance < PAYMENT_AMOUNT) {
-            toast({
-                title: "Insufficient MEME Balance 🚫",
-                description: "You need at least 5 MEME to generate. Use the Daily Claim!",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        setIsPaying(true);
-        try {
-            toast({
-                title: "Processing Payment...",
-                description: "Please confirm the transaction to pay 5 MEME.",
-            });
-            writeContract({
-                address: MEME_TOKEN_ADDRESS as `0x${string}`,
-                abi: MEME_TOKEN_ABI,
-                functionName: 'transfer',
-                args: [BURN_ADDRESS, PAYMENT_AMOUNT]
-            });
-        } catch (e) {
-            console.error(e);
-            setIsPaying(false);
-            toast({
-                title: "Payment Failed",
-                description: "Transaction was rejected or failed.",
-                variant: "destructive"
-            });
-        }
+    // Handlers
+    const handleAddLabelStart = (x: number, y: number) => {
+        setPendingLabel({ x, y });
+        setLabelInput("");
+        setIsLabelDialogOpen(true);
     };
 
-    const performGeneration = async () => {
-        setIsLoading(true);
-        try {
-            const result = await generateMemeImage(prompt);
-            if (result.success && result.imageUrl) {
-                setImageUrl(result.imageUrl);
-                toast({
-                    title: "Meme Generated! 🚀",
-                    description: "Your meme is ready on the canvas.",
-                });
-            } else {
-                toast({
-                    title: "Generation Failed",
-                    description: result.error || "Unknown error",
-                    variant: "destructive"
-                });
-            }
-        } catch (e) {
-            console.error(e);
-            toast({
-                title: "Generation Error",
-                description: "Something went wrong.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsLoading(false);
-        }
+    const confirmLabel = () => {
+        if (!pendingLabel || !labelInput) return;
+
+        const newLabel = {
+            id: Date.now().toString(),
+            x: pendingLabel.x,
+            y: pendingLabel.y,
+            label: labelInput
+        };
+
+        setLabels([...labels, newLabel]);
+        setIsLabelDialogOpen(false);
+        setPendingLabel(null);
     };
 
-    const updateText = (id: string, newAttrs: any) => {
-        const newTexts = texts.map((text) => {
-            if (text.id === id) {
-                return newAttrs;
-            }
-            return text;
-        });
-        setTexts(newTexts);
+    const removeLabel = (id: string) => {
+        setLabels(labels.filter(l => l.id !== id));
     };
 
     const handleExport = () => {
         if (stageRef.current) {
             const uri = stageRef.current.toDataURL();
             const link = document.createElement('a');
-            link.download = 'meme-story.png';
+            link.download = 'label-human-dataset.png';
             link.href = uri;
             document.body.appendChild(link);
             link.click();
@@ -179,81 +87,56 @@ function CreateContent() {
 
     const handleOpenRegister = () => {
         if (!isConnected) {
-            alert("Please connect your wallet first!");
+            toast({ title: "Wallet not connected", description: "Please connect wallet to register IP.", variant: "destructive" });
             return;
         }
 
-        if (stageRef.current) {
-            const uri = stageRef.current.toDataURL();
-            setImageToRegister(uri);
-            setIsRegisterModalOpen(true);
-        } else if (imageUrl) {
-            setImageToRegister(imageUrl);
-            setIsRegisterModalOpen(true);
-        } else {
-            alert("Please generate a meme first!");
+        if (!imageUrl) {
+            toast({ title: "No image", description: "Please upload an image first.", variant: "destructive" });
+            return;
         }
+
+        // Ideally we register the ORIGINAL image, but for visualization we might want the labels.
+        // Standard practice for labeling is: Image + Sidecar JSON.
+        // Here we'll register the Image URL (as is) and pass labels in metadata.
+
+        // If we want to snapshot the View with labels, we use stageRef.
+        // Let's use the original image for clean data, and labels as metadata.
+        setImageToRegister(imageUrl);
+        setIsRegisterModalOpen(true);
     };
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-background">
             <Navbar />
 
-            <main className="flex-1 container py-6 grid md:grid-cols-[400px_1fr] gap-6 grid-cols-1">
+            <main className="flex-1 container py-6 grid md:grid-cols-[350px_1fr] gap-6 grid-cols-1">
 
-                {/* Left Panel: Controls */}
+                {/* Left Panel: Tools */}
                 <div className="space-y-6">
 
-                    {/* Step 1: Generation */}
-                    <Card>
+                    {/* Step 1: Upload */}
+                    <Card className="border-border bg-card">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Wand2 className="w-5 h-5 text-purple-500" />
-                                AI Generation
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Textarea
-                                value={prompt}
-                                onChange={(e) => setPrompt(e.target.value)}
-                                placeholder="Describe your meme idea... (e.g., 'A cat trading crypto on the moon')"
-                                className="resize-none min-h-[100px]"
-                            />
-                            <Button
-                                onClick={handleGenerate}
-                                disabled={isLoading || isPaying || isTxPending || isConfirming || !prompt}
-                                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-                            >
-                                {isLoading ? (
-                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                                ) : isTxPending || isConfirming || isPaying ? (
-                                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing Payment...</>
-                                ) : (
-                                    "Pay 5 MEME & Generate 🚀"
-                                )}
-                            </Button>
-                        </CardContent>
-                    </Card>
-
-                    {/* Step 2: Upload */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Layers className="w-5 h-5 text-blue-500" />
-                                Upload & Remix
+                            <CardTitle className="flex items-center gap-2 text-primary">
+                                <Upload className="w-5 h-5" />
+                                1. Upload Data
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                Upload your own image or an existing meme to remix.
+                                Upload an image containing people or objects to label.
                             </p>
                             <div className="grid w-full items-center gap-1.5">
                                 <Button
                                     variant="outline"
                                     onClick={() => document.getElementById('file-upload')?.click()}
-                                    className="w-full border-dashed border-2 h-20"
+                                    className="w-full border-dashed border-2 h-24 hover:bg-muted/50 transition-colors"
                                 >
-                                    Upload Image
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Upload className="w-6 h-6 text-muted-foreground" />
+                                        <span>Click to Upload</span>
+                                    </div>
                                 </Button>
                                 <input
                                     type="file"
@@ -275,21 +158,39 @@ function CreateContent() {
                         </CardContent>
                     </Card>
 
+                    {/* Step 2: Instructions */}
+                    <Card className="border-border bg-card">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-primary">
+                                <ScanFace className="w-5 h-5" />
+                                2. Labeling
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm text-muted-foreground">
+                            <p>Click anywhere on the image to add a point label.</p>
+                            <p>Examples: "Face", "Hand", "Car", "Tree".</p>
+                            <div className="pt-2 flex items-center justify-between">
+                                <span className="font-mono text-xs bg-muted px-2 py-1 rounded">Labels: {labels.length}</span>
+                                <Button variant="ghost" size="sm" onClick={() => setLabels([])} className="h-6 text-xs text-red-400 hover:text-red-300">Clear All</Button>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Step 3: Registration */}
-                    <Card className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-900/10">
+                    <Card className="border-purple-500/30 bg-purple-500/10">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                Story Protocol
+                            <CardTitle className="flex items-center gap-2 text-purple-400">
+                                <Save className="w-5 h-5" />
+                                3. Register IP
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                Register your meme as an IP Asset to enable remixing and royalties.
+                                Mint your dataset and register it on Story Protocol.
                             </p>
                             {isConnected ? (
-                                <Button className="w-full" variant="secondary" onClick={handleOpenRegister}>
-                                    Mint & Register IP
+                                <Button className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 text-white shadow-lg" onClick={handleOpenRegister}>
+                                    Register Dataset
                                 </Button>
                             ) : (
                                 <ConnectButton />
@@ -300,41 +201,65 @@ function CreateContent() {
                 </div>
 
                 {/* Right Panel: Canvas */}
-                <div className="bg-muted/30 border rounded-xl flex items-center justify-center min-h-[500px] relative overflow-hidden h-auto aspect-video md:h-[600px]">
-                    {imageUrl || texts.length > 0 ? (
-                        <MemeCanvas
+                <div className="bg-card border border-border rounded-xl flex items-center justify-center min-h-[500px] relative overflow-hidden h-auto aspect-video md:h-[700px] shadow-2xl shadow-black/50">
+                    {imageUrl ? (
+                        <LabelCanvas
                             imageUrl={imageUrl}
-                            texts={texts}
-                            onUpdateText={updateText}
-                            onSelectText={selectText}
-                            selectedId={selectedId}
+                            labels={labels}
+                            onAddLabel={handleAddLabelStart}
+                            onRemoveLabel={removeLabel}
                             stageRef={stageRef}
                         />
                     ) : (
-                        <div className="text-center text-muted-foreground">
-                            <p>Canvas Area</p>
-                            <p className="text-sm">Generated image will appear here</p>
+                        <div className="text-center text-muted-foreground/50 flex flex-col items-center gap-4">
+                            <ScanFace className="w-16 h-16 opacity-20" />
+                            <p>Upload an image to start labeling</p>
                         </div>
                     )}
 
-
                     {/* Canvas Toolbar */}
-                    <div className="absolute top-4 right-4 flex gap-2 z-10">
-                        <Button size="icon" variant="secondary" onClick={handleExport} title="Download">
-                            <Download className="w-4 h-4" />
-                        </Button>
-                    </div>
+                    {imageUrl && (
+                        <div className="absolute top-4 right-4 flex gap-2 z-10">
+                            <Button size="icon" variant="secondary" onClick={handleExport} title="Download View">
+                                <Download className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
             </main>
+
+            {/* Label Input Dialog */}
+            <Dialog open={isLabelDialogOpen} onOpenChange={setIsLabelDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Add Label</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <Label htmlFor="label-name" className="text-right mb-2 block">
+                            Label Name
+                        </Label>
+                        <Input
+                            id="label-name"
+                            value={labelInput}
+                            onChange={(e) => setLabelInput(e.target.value)}
+                            placeholder="e.g. Left Eye"
+                            onKeyDown={(e) => e.key === 'Enter' && confirmLabel()}
+                            autoFocus
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button type="button" onClick={confirmLabel}>Add Label</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <RegistrationModal
                 isOpen={isRegisterModalOpen}
                 onClose={() => setIsRegisterModalOpen(false)}
                 imageUrl={imageToRegister}
-                prompt={prompt}
-                parentContract={parentContract || undefined}
-                parentTokenId={parentTokenId || undefined}
+                prompt=""
+                labels={labels}
             />
         </div>
     );

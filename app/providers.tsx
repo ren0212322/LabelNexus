@@ -48,8 +48,8 @@ const storyAeneid = defineChain({
 const { wallets } = getDefaultWallets();
 
 const config = getDefaultConfig({
-    appName: "MemeStory",
-    projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "", // TODO: User should replace this eventually, or we leave generic
+    appName: "LabelHuman",
+    projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "3fcc6bba6f1d54709235a8efcf6a4ecc", // Fallback for build
     wallets: [
         ...wallets,
         {

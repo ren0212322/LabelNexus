@@ -94,13 +94,13 @@ export function Navbar() {
     return (
         <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
             <div className="container flex h-16 items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                     <span>MemeStory</span>
+                <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+                    <span>LabelHuman</span>
                 </Link>
 
                 {/* Navigation Links */}
                 <div className="hidden md:flex gap-6 text-sm font-medium">
-                    <Link href="/create" className="hover:text-primary transition-colors">Studio</Link>
+                    <Link href="/create" className="hover:text-primary transition-colors">Label</Link>
                     <Link href="/gallery" className="text-muted-foreground hover:text-primary transition-colors">Gallery</Link>
                 </div>
 
@@ -110,7 +110,7 @@ export function Navbar() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="hidden sm:flex gap-2 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
+                            className="hidden sm:flex gap-2 text-primary hover:text-primary-foreground hover:bg-primary/90"
                             onClick={handleClaim}
                             disabled={isPending || isConfirming || isClaiming || isCooldown}
                         >

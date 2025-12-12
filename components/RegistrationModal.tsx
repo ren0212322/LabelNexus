@@ -21,9 +21,10 @@ interface RegistrationModalProps {
     prompt: string;
     parentContract?: string;
     parentTokenId?: string;
+    labels?: any[];
 }
 
-export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentContract, parentTokenId }: RegistrationModalProps) {
+export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentContract, parentTokenId, labels }: RegistrationModalProps) {
     const { address, client: walletClient } = useWallet();
     const [storyClient, setStoryClient] = useState<StoryClient | null>(null);
 
@@ -37,6 +38,8 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
     const [creatorName, setCreatorName] = useState("");
     const [description, setDescription] = useState("");
     const [licenseType, setLicenseType] = useState("non-commercial");
+    const [revShare, setRevShare] = useState("10");
+    console.log("RegistrationModal State - revShare:", revShare);
 
     const [status, setStatus] = useState<"idle" | "uploading" | "minting" | "success" | "error">("idle");
     const [txHash, setTxHash] = useState("");
@@ -61,14 +64,16 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
 
     // Load Collections & Auto-fill
     useEffect(() => {
-        const stored = JSON.parse(localStorage.getItem("memeStory_collections") || "[]");
+        const stored = JSON.parse(localStorage.getItem("labelHuman_collections") || "[]");
         setSavedCollections(stored);
         if (stored.length > 0) setCollectionAddress(stored[0].address);
 
         if (prompt) {
             setTitle(prompt.slice(0, 50));
             // Only auto-fill if not already describing something custom
-            if (!description) setDescription(`Meme generated from prompt: ${prompt}`);
+            if (!description) setDescription(`Dataset with ${labels?.length || 0} labels. Source prompt: ${prompt}`);
+        } else if (labels && labels.length > 0) {
+            if (!description) setDescription(`Labeled dataset containing ${labels.length} points.`);
         }
     }, [isOpen, prompt]);
 
@@ -100,7 +105,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
             const newEntry = { name: prevText, address: newCollection.spgNftContract! };
             const updated = [...savedCollections, newEntry];
             setSavedCollections(updated);
-            localStorage.setItem("memeStory_collections", JSON.stringify(updated));
+            localStorage.setItem("labelHuman_collections", JSON.stringify(updated));
             setCollectionAddress(newCollection.spgNftContract!);
             setNewCollectionName("");
             setIsCreatingCollection(false);
@@ -155,9 +160,12 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                 image: ipfsImageUrl,
                 mediaUrl: ipfsImageUrl,
                 mediaType: "image/png",
-                creators: [{ name: creatorName || "MemeStory User", address }],
+                creators: [{ name: creatorName || "LabelHuman User", address }],
                 // Add parent info to metadata as fallback provenance
-                attributes: parentContract ? [{ trait_type: "Parent Contract", value: parentContract }, { trait_type: "Parent Token ID", value: parentTokenId }] : []
+                attributes: [
+                    ...(parentContract ? [{ trait_type: "Parent Contract", value: parentContract }, { trait_type: "Parent Token ID", value: parentTokenId }] : []),
+                    ...(labels ? [{ trait_type: "Label Count", value: labels.length }, { trait_type: "Labels", value: JSON.stringify(labels) }] : [])
+                ]
             };
             const ipMetadataURI = await uploadJSONToPinata(ipMetadata);
 
@@ -172,9 +180,14 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
 
             let licenseTerms;
             if (licenseType === 'commercial') {
+                const share = parseInt(revShare);
+                if (isNaN(share) || share < 0 || share > 100) {
+                    throw new Error("Revenue share must be between 0 and 100");
+                }
+
                 licenseTerms = PILFlavor.commercialRemix({
-                    commercialRevShare: 10000000, // 10% (10,000,000 = 10%)
-                    defaultMintingFee: 0n,
+                    commercialRevShare: share,
+                    defaultMintingFee: BigInt(0),
                     currency: '0x1514000000000000000000000000000000000000' // WIP on Aeneid
                 });
             } else {
@@ -214,15 +227,15 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
             <DialogContent className="sm:max-w-[500px] border-2 border-yellow-400/20 shadow-xl bg-background">
                 <DialogHeader>
                     <DialogTitle>
-                        {parentContract ? "Remix & Register IP" : "Register IP Asset"}
+                        {parentContract ? "Remix & Register Dataset" : "Register Labeled Dataset"}
                     </DialogTitle>
                 </DialogHeader>
 
                 {status === "success" ? (
                     <div className="flex flex-col items-center justify-center py-8 space-y-4 text-center">
                         <CheckCircle2 className="h-16 w-16 text-green-500" />
-                        <h3 className="font-bold text-xl">Successfully Minted!</h3>
-                        <p className="text-muted-foreground">Your meme is now on Story Protocol.</p>
+                        <h3 className="font-bold text-xl">Successfully Registered!</h3>
+                        <p className="text-muted-foreground">Your dataset is now on Story Protocol.</p>
                         <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">
                             View on Explorer
                         </a>
@@ -234,7 +247,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                         {/* 1. Collection */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <Label className="text-yellow-500 font-bold">Select SPG NFT Collection</Label>
+                                <Label className="text-primary font-bold">Select Dataset Collection</Label>
                             </div>
 
                             {!isCreatingCollection ? (
@@ -276,8 +289,8 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
 
                         {/* 2. Metadata */}
                         <div className="space-y-2">
-                            <Label className="text-yellow-500 font-bold">Title (for IP & NFT Metadata)</Label>
-                            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Grumpy Cat Remix" />
+                            <Label className="text-primary font-bold">Title</Label>
+                            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Faces Dataset v1" />
                         </div>
 
                         <div className="space-y-2">
@@ -294,26 +307,45 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                                     AI Generate
                                 </Button>
                             </div>
-                            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your meme..." />
+                            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your dataset..." />
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-yellow-500 font-bold">Creator Name</Label>
+                            <Label className="text-primary font-bold">Creator Name</Label>
                             <Input value={creatorName} onChange={(e) => setCreatorName(e.target.value)} placeholder="Enter your name or alias" />
                         </div>
 
-                        {/* 3. License */}
-                        <div className="space-y-2">
-                            <Label className="text-yellow-500 font-bold">License Type</Label>
-                            <Select value={licenseType} onValueChange={setLicenseType}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="non-commercial">Non-Commercial Social Remix</SelectItem>
-                                    <SelectItem value="commercial">Commercial Remix (10% RevShare)</SelectItem>
-                                </SelectContent>
-                            </Select>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label className="text-primary font-bold">License Type</Label>
+                                <Select value={licenseType} onValueChange={setLicenseType}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="non-commercial">Non-Commercial Social Remix</SelectItem>
+                                        <SelectItem value="commercial">Commercial Remix</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {licenseType === 'commercial' && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                    <Label className="text-primary font-bold">Commercial Revenue Share (%)</Label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={revShare}
+                                            onChange={(e) => setRevShare(e.target.value)}
+                                            placeholder="e.g. 10"
+                                        />
+                                        <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Percentage of revenue you claim from remixes.</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Error */}
@@ -327,11 +359,11 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                         <Button
                             onClick={handleMintAndRegister}
                             disabled={status === "uploading" || status === "minting" || !collectionAddress}
-                            className="w-full bg-yellow-500 text-black font-bold hover:bg-yellow-400"
+                            className="w-full bg-primary text-white font-bold hover:bg-primary/90"
                         >
                             {status === "uploading" && <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading to IPFS...</>}
                             {status === "minting" && <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming in Wallet...</>}
-                            {status === "idle" && (parentContract ? "Remix & Register IP" : "Mint & Register IP")}
+                            {status === "idle" && (parentContract ? "Remix & Register Dataset" : "Mint & Register Dataset")}
                         </Button>
                     </div>
                 )}
