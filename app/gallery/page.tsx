@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Loader2, Search, Zap, ExternalLink, Layers } from "lucide-react";
-import { fetchCollectionItems, GalleryItem } from "@/app/actions/story";
+import { fetchCollectionItems, fetchIpAsset, GalleryItem } from "@/app/actions/story";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useWallet } from "@/hooks/useWallet";
@@ -16,7 +16,7 @@ import { useWallet } from "@/hooks/useWallet";
 // Maybe we can create a "Featured" section later.
 
 export default function GalleryPage() {
-    const [address, setAddress] = useState("");
+    const [ipId, setIpId] = useState("");
     const [items, setItems] = useState<GalleryItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -26,27 +26,11 @@ export default function GalleryPage() {
     const [hasAutoSearched, setHasAutoSearched] = useState(false);
 
     // Auto-search latest created collection from localStorage
-    useEffect(() => {
-        if (!hasAutoSearched) {
-            try {
-                const stored = localStorage.getItem("memeStory_collections");
-                if (stored) {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.length > 0) {
-                        const latest = parsed[parsed.length - 1];
-                        setAddress(latest.address);
-                        handleSearch(latest.address);
-                    }
-                }
-            } catch (e) {
-                console.error("Auto-load failed", e);
-            }
-            setHasAutoSearched(true);
-        }
-    }, [hasAutoSearched]);
+    // MODIFIED: If we store IP IDs now, we could load that. 
+    // But for now, let's just default to empty/manual search as requested.
 
-    const handleSearch = async (searchAddr?: string) => {
-        const target = searchAddr || address;
+    const handleSearch = async (searchId?: string) => {
+        const target = searchId || ipId;
         if (!target) return;
 
         setIsLoading(true);
@@ -54,44 +38,29 @@ export default function GalleryPage() {
         setItems([]);
 
         try {
-            const result = await fetchCollectionItems(target, 20);
+            // Updated to fetch Single IP
+            const result = await fetchIpAsset(target);
             if (result.error) {
                 setError(result.error);
             } else {
                 setItems(result.items);
             }
         } catch (e) {
-            setError("Failed to fetch collection.");
+            setError("Failed to fetch IP Asset.");
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleRemix = (item: GalleryItem) => {
-        // Navigate to Studio with params
+        // Navigate to Explore page with IP ID autofilled
+        // Fallback to the text input (ipId) if the item id is missing/undefined for some reason
+        const targetId = item.id || ipId;
+
         const params = new URLSearchParams();
-        params.set("parentIpId", item.id); // We used collection-id as ID, but for real remix we might need actual IP ID.
-        // Wait, fetchCollectionItems returned `id` as `${collectionAddress}-${i}` which isn't the IP ID.
-        // The fetch logic didn't actually fetch the IP ID from Story Protocol.
-        // For the hackathon "Remix" flow, we might just pass the image and let them mint a new IP.
-        // BUT the user asked to "use them as children".
-        // To do that, we need the Parent IP ID.
-        // Determining IP ID from Token ID requires a contract call to IP Asset Registry `ipId(chainId, tokenContract, tokenId)`.
+        params.set("ipId", targetId);
 
-        // For now, let's pass the image. If we can't get IP ID easily here without more ABI, 
-        // we heavily assume the user wants to *visually* remix.
-        // Actually, I can update fetchCollectionItems to get IP ID if I want to be 100% correct,
-        // or just pass the contract and tokenId and let the Studio figure it out.
-
-        // Let's pass image and title for now.
-        params.set("parentImage", item.image);
-        if (item.title) params.set("parentPrompt", `Remix of ${item.title}`);
-
-        // Passing contract and tokenId so Studio can resolve IP ID if needed.
-        params.set("parentContract", item.contract);
-        params.set("parentTokenId", item.tokenId);
-
-        router.push(`/create?${params.toString()}`);
+        router.push(`/explore?${params.toString()}`);
     };
 
     return (
@@ -100,17 +69,17 @@ export default function GalleryPage() {
 
             <main className="container mx-auto py-8 max-w-5xl">
                 <div className="text-center mb-12 space-y-4">
-                    <h1 className="text-4xl font-bold tracking-tight">Meme Gallery</h1>
+                    <h1 className="text-4xl font-bold tracking-tight">LabelNexus Gallery</h1>
                     <p className="text-muted-foreground max-w-lg mx-auto">
-                        Explore collections on Story Protocol. Enter an SPG NFT Collection address to view memes.
+                        View IP Assets on Story Protocol. Enter an IP Address (0x...) to verify details and remix.
                     </p>
 
                     <div className="flex w-full max-w-sm items-center space-x-2 mx-auto">
                         <Input
                             type="text"
-                            placeholder="0x..."
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
+                            placeholder="Enter IP Asset ID (0x...)"
+                            value={ipId}
+                            onChange={(e) => setIpId(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         />
                         <Button onClick={() => handleSearch()} disabled={isLoading}>
@@ -158,7 +127,7 @@ export default function GalleryPage() {
                         ))}
                     </div>
                 ) : (
-                    !isLoading && address && !error && (
+                    !isLoading && ipId && !error && (
                         <div className="text-center py-20 text-muted-foreground">
                             No items found or invalid collection.
                         </div>
@@ -166,14 +135,14 @@ export default function GalleryPage() {
                 )}
 
                 {/* Empty State / Defaults */}
-                {!address && (
+                {!ipId && (
                     <div className="space-y-12">
                         {/* 1. Quick Action: View My Wallet */}
                         <div className="text-center py-10 border-2 border-dashed rounded-xl bg-muted/20">
                             <Search className="w-10 h-10 mx-auto text-muted-foreground mb-4 opacity-50" />
                             <h3 className="text-lg font-semibold mb-2">Explore the Gallery</h3>
                             <p className="text-muted-foreground max-w-sm mx-auto mb-6">
-                                Search for any SPG Collection address or Wallet address to view their IP Assets.
+                                Search for any IP Asset ID to view details and remix it.
                             </p>
                             {/* Hint for auto-fill */}
                             <p className="text-xs text-muted-foreground">
@@ -181,8 +150,7 @@ export default function GalleryPage() {
                             </p>
                         </div>
 
-                        {/* 2. Saved Collections (LocalStorage) */}
-                        <SavedCollections onSelect={(addr) => { setAddress(addr); handleSearch(); }} />
+                        {/* 2. No saved collections for now as we switched to IP ID search */}
                     </div>
                 )}
             </main>

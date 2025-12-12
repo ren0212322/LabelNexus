@@ -182,7 +182,13 @@ async function resolveMetadata(uri: string): Promise<any> {
         console.log("Resolved metadata:", data);
 
         let imageUrl = data.image || data.image_url || "";
-        if (imageUrl.startsWith('ipfs://')) {
+
+        // Handle object structure (Alchemy/Story API format)
+        if (typeof imageUrl === 'object' && imageUrl !== null) {
+            imageUrl = imageUrl.originalUrl || imageUrl.cachedUrl || imageUrl.pngUrl || "";
+        }
+
+        if (typeof imageUrl === 'string' && imageUrl.startsWith('ipfs://')) {
             imageUrl = imageUrl.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
         }
         data.image = imageUrl;
@@ -228,3 +234,60 @@ export async function uploadJSONToPinata(json: any): Promise<string> {
     return `https://ipfs.io/ipfs/${res.data.IpfsHash}`;
 }
 
+
+// New Action: Fetch Single IP by ID using API
+export async function fetchIpAsset(ipId: string): Promise<{ items: GalleryItem[], error?: string }> {
+    if (!ipId || !ipId.startsWith('0x')) {
+        return { items: [], error: "Invalid IP Address" };
+    }
+
+    try {
+        const apiKey = process.env.NEXT_PUBLIC_STORY_API_KEY || "KOTbaGUSWQ6cUJWhiJYiOjPgB0kTRu1eCFFvQL0IWls"; // Fallback to testnet public key if needed
+        const response = await axios.post(
+            "https://staging-api.storyprotocol.net/api/v4/assets",
+            {
+                where: {
+                    ipIds: [ipId]
+                }
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-API-Key": apiKey
+                }
+            }
+        );
+
+        if (response.data && response.data.data && response.data.data.length > 0) {
+            const asset = response.data.data[0];
+
+            // Extract Image
+            let imageUrl = asset.nftMetadata?.image || asset.ipMetadata?.image || asset.ipMetadata?.mediaUrl || "";
+            if (typeof imageUrl === 'object') {
+                // @ts-ignore
+                imageUrl = imageUrl.originalUrl || imageUrl.cachedUrl || imageUrl.pngUrl || "";
+            }
+            if (typeof imageUrl === 'string' && imageUrl.startsWith('ipfs://')) {
+                imageUrl = imageUrl.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+            }
+
+            const item: GalleryItem = {
+                id: asset.id || ipId, // Ensure we have the ID (fallback to query if missing in response)
+                tokenId: asset.nftMetadata?.tokenId || asset.tokenId || "0",
+                image: imageUrl,
+                title: asset.nftMetadata?.name || asset.ipMetadata?.name || `IP Asset ${asset.id.slice(0, 6)}`,
+                description: asset.nftMetadata?.description || asset.ipMetadata?.description || "No description",
+                owner: asset.owner || "",
+                contract: asset.tokenContract || ""
+            };
+
+            return { items: [item] };
+        } else {
+            return { items: [], error: "IP Asset not found." };
+        }
+
+    } catch (e: any) {
+        console.error("API Fetch Error:", e);
+        return { items: [], error: "Failed to fetch IP Asset details." };
+    }
+}

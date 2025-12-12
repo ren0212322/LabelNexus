@@ -10,7 +10,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { StoryClient, StoryConfig, aeneid } from "@story-protocol/core-sdk";
 import { custom, createPublicClient, http } from "viem";
 import { Loader2, Search, FileSignature, GitFork, RefreshCcw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 
 const LICENSE_REGISTRY = "0x529a750E02d8E2f15649c13D69a465286a780e24";
@@ -19,8 +19,9 @@ export default function ExplorePage() {
     const { address, client: walletClient } = useWallet();
     const router = useRouter();
     const { toast } = useToast();
+    const searchParams = useSearchParams();
 
-    const [ipId, setIpId] = useState("");
+    const [ipId, setIpId] = useState(searchParams.get("ipId") || "");
     const [licenseTermsId, setLicenseTermsId] = useState("1"); // Default to 1 (usually Non-Commercial)
     const [isFetchingTerms, setIsFetchingTerms] = useState(false);
 
