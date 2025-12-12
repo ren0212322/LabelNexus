@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +15,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 const LICENSE_REGISTRY = "0x529a750E02d8E2f15649c13D69a465286a780e24";
 
-export default function ExplorePage() {
+// Main Content Component (using useSearchParams)
+function ExploreContent() {
     const { address, client: walletClient } = useWallet();
     const router = useRouter();
     const { toast } = useToast();
@@ -281,5 +282,13 @@ export default function ExplorePage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function ExplorePage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>}>
+            <ExploreContent />
+        </Suspense>
     );
 }

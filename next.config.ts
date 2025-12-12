@@ -4,11 +4,11 @@ const nextConfig: NextConfig = {
     typescript: {
         ignoreBuildErrors: true,
     },
+    serverExternalPackages: ["pino", "thread-stream"],
     experimental: {
         serverActions: {
             bodySizeLimit: "8mb",
         },
-        serverComponentsExternalPackages: ["pino", "thread-stream"],
     },
 };
 
