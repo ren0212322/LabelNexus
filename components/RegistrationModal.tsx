@@ -9,8 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CheckCircle2, Plus, Wand2 } from "lucide-react";
 import { useWallet } from "@/hooks/useWallet";
-import { StoryClient, StoryConfig, PILFlavor } from "@story-protocol/core-sdk";
-import { custom } from "viem";
+import { StoryClient, StoryConfig, PILFlavor, WIP_TOKEN_ADDRESS, LicenseTerms } from "@story-protocol/core-sdk";
+import { custom, parseEther } from "viem";
 import { uploadToPinata, uploadJSONToPinata } from "@/app/actions/story";
 import { generateMemeDescription } from "@/app/actions/gemini";
 
@@ -19,12 +19,12 @@ interface RegistrationModalProps {
     onClose: () => void;
     imageUrl: string;
     prompt: string;
-    parentContract?: string;
-    parentTokenId?: string;
+    parentIpId?: string;
+    parentLicenseTermsId?: string;
     labels?: any[];
 }
 
-export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentContract, parentTokenId, labels }: RegistrationModalProps) {
+export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentIpId, parentLicenseTermsId, labels }: RegistrationModalProps) {
     const { address, client: walletClient } = useWallet();
     const [storyClient, setStoryClient] = useState<StoryClient | null>(null);
 
@@ -136,11 +136,10 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
 
     // Remix Logic Placeholder
     useEffect(() => {
-        if (parentContract && parentTokenId) {
-            console.log("Remixing from:", parentContract, parentTokenId);
-            // Ideally resolve IP ID here.
+        if (parentIpId) {
+            console.log("Remixing from IP:", parentIpId);
         }
-    }, [parentContract, parentTokenId]);
+    }, [parentIpId]);
 
 
     const handleMintAndRegister = async () => {
@@ -161,9 +160,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                 mediaUrl: ipfsImageUrl,
                 mediaType: "image/png",
                 creators: [{ name: creatorName || "LabelHuman User", address }],
-                // Add parent info to metadata as fallback provenance
                 attributes: [
-                    ...(parentContract ? [{ trait_type: "Parent Contract", value: parentContract }, { trait_type: "Parent Token ID", value: parentTokenId }] : []),
                     ...(labels ? [{ trait_type: "Label Count", value: labels.length }, { trait_type: "Labels", value: JSON.stringify(labels) }] : [])
                 ]
             };
@@ -188,26 +185,50 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                 licenseTerms = PILFlavor.commercialRemix({
                     commercialRevShare: share,
                     defaultMintingFee: BigInt(0),
-                    currency: '0x1514000000000000000000000000000000000000' // WIP on Aeneid
+                    currency: WIP_TOKEN_ADDRESS
                 });
             } else {
                 licenseTerms = PILFlavor.nonCommercialSocialRemixing();
             }
 
-            const txResponse = await storyClient.ipAsset.registerIpAsset({
-                nft: { type: 'mint', spgNftContract: collectionAddress as `0x${string}` },
-                licenseTermsData: [{ terms: licenseTerms }],
-                ipMetadata: {
-                    ipMetadataURI,
-                    ipMetadataHash: `0x${'0'.repeat(64)}`,
-                    nftMetadataURI,
-                    nftMetadataHash: `0x${'0'.repeat(64)}`
-                }
-            });
+            console.log("=== REGISTRATION DATA DEBUG ===");
+            console.log("Collection Address:", collectionAddress);
+            console.log("Title:", title);
+            console.log("Description:", description);
+            console.log("License Type:", licenseType);
+            console.log("Rev Share:", revShare);
+            console.log("License Terms Object:", JSON.stringify(licenseTerms, (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value // Handle BigInt serialization
+                , 2));
+            console.log("IP Metadata:", ipMetadata);
+            console.log("NFT Metadata:", nftMetadata);
+            console.log("Parent IP ID:", parentIpId);
+            console.log("Parent License Terms ID:", parentLicenseTermsId);
+            console.log("===============================");
+
+            let txResponse;
+
+            if (parentIpId && parentLicenseTermsId) {
+                // Register as Derivative
+            } else {
+                // Regular Registration
+                console.log("Action: Registering New IP...");
+                txResponse = await storyClient.ipAsset.registerIpAsset({
+                    nft: { type: 'mint', spgNftContract: collectionAddress as `0x${string}` },
+                    licenseTermsData: [{ terms: licenseTerms }],
+                    ipMetadata: {
+                        ipMetadataURI,
+                        ipMetadataHash: `0x${'0'.repeat(64)}`,
+                        nftMetadataURI,
+                        nftMetadataHash: `0x${'0'.repeat(64)}`
+                    }
+                });
+            }
 
             if (txResponse.txHash) {
                 setTxHash(txResponse.txHash);
                 console.log("=====================IP ID:", txResponse.ipId);
+                console.log(`License Terms ID: ${txResponse.licenseTermsIds}`);
 
                 setExplorerUrl(`https://aeneid.explorer.story.foundation/ipa/${txResponse.ipId}`);
                 setStatus("success");
@@ -227,7 +248,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
             <DialogContent className="sm:max-w-[500px] border-2 border-yellow-400/20 shadow-xl bg-background">
                 <DialogHeader>
                     <DialogTitle>
-                        {parentContract ? "Remix & Register Dataset" : "Register Labeled Dataset"}
+                        {parentIpId ? "Remix & Register Derivative" : "Register Labeled Dataset"}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -315,38 +336,40 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                             <Input value={creatorName} onChange={(e) => setCreatorName(e.target.value)} placeholder="Enter your name or alias" />
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <Label className="text-primary font-bold">License Type</Label>
-                                <Select value={licenseType} onValueChange={setLicenseType}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="non-commercial">Non-Commercial Social Remix</SelectItem>
-                                        <SelectItem value="commercial">Commercial Remix</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {licenseType === 'commercial' && (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                    <Label className="text-primary font-bold">Commercial Revenue Share (%)</Label>
-                                    <div className="relative">
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            max="100"
-                                            value={revShare}
-                                            onChange={(e) => setRevShare(e.target.value)}
-                                            placeholder="e.g. 10"
-                                        />
-                                        <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">Percentage of revenue you claim from remixes.</p>
+                        {!parentIpId && (
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label className="text-primary font-bold">License Type</Label>
+                                    <Select value={licenseType} onValueChange={setLicenseType}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="non-commercial">Non-Commercial Social Remix</SelectItem>
+                                            <SelectItem value="commercial">Commercial Remix</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            )}
-                        </div>
+
+                                {licenseType === 'commercial' && (
+                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                        <Label className="text-primary font-bold">Commercial Revenue Share (%)</Label>
+                                        <div className="relative">
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={revShare}
+                                                onChange={(e) => setRevShare(e.target.value)}
+                                                placeholder="e.g. 10"
+                                            />
+                                            <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">%</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">Percentage of revenue you claim from remixes.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Error */}
                         {errorMessage && (
@@ -363,7 +386,7 @@ export function RegistrationModal({ isOpen, onClose, imageUrl, prompt, parentCon
                         >
                             {status === "uploading" && <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading to IPFS...</>}
                             {status === "minting" && <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Confirming in Wallet...</>}
-                            {status === "idle" && (parentContract ? "Remix & Register Dataset" : "Mint & Register Dataset")}
+                            {status === "idle" && (parentIpId ? "Register Derivative" : "Mint & Register Dataset")}
                         </Button>
                     </div>
                 )}

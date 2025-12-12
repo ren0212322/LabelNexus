@@ -85,6 +85,75 @@ function CreateContent() {
         }
     };
 
+    const searchParams = useSearchParams();
+    const parentIpId = searchParams.get('parentIpId');
+    const parentLicenseTermsId = searchParams.get('parentLicenseTermsId');
+
+    // Fetch Parent IP Image if remixing
+    useEffect(() => {
+        if (parentIpId) {
+            const fetchParentIP = async () => {
+                try {
+                    toast({ title: "Loading Parent IP...", description: "Fetching original image for remix." });
+                    console.log("Fetching Remix ID:", parentIpId);
+                    const response = await fetch("https://staging-api.storyprotocol.net/api/v4/assets", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-API-Key": process.env.NEXT_PUBLIC_STORY_API_KEY || "KOTbaGUSWQ6cUJWhiJYiOjPgB0kTRu1eCFFvQL0IWls"
+                        },
+                        body: JSON.stringify({
+                            where: {
+                                ipIds: [parentIpId]
+                            }
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.data && data.data.length > 0) {
+                        const ipAsset = data.data[0];
+
+                        let fetchedUrl: string | undefined = undefined;
+
+                        // Helper to safely get string
+                        const getUrl = (item: any) => typeof item === 'string' ? item : item?.originalUrl || item?.cachedUrl || item?.pngUrl;
+
+                        if (ipAsset.nftMetadata) {
+                            fetchedUrl = getUrl(ipAsset.nftMetadata.image);
+                            if (!fetchedUrl && ipAsset.nftMetadata.raw?.metadata?.image) {
+                                fetchedUrl = ipAsset.nftMetadata.raw.metadata.image;
+                            }
+                        }
+
+                        if (!fetchedUrl) {
+                            fetchedUrl = ipAsset.ipMetadata?.image || ipAsset.ipMetadata?.mediaUrl;
+                        }
+
+                        console.log("Resolved Image URL:", fetchedUrl);
+
+                        if (fetchedUrl) {
+                            // Ensure it's a string
+                            let displayUrl = String(fetchedUrl);
+
+                            // Convert IPFS to HTTP
+                            if (displayUrl.startsWith("ipfs://")) {
+                                displayUrl = displayUrl.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
+                            }
+                            setImageUrl(displayUrl);
+                            toast({ title: "Image Loaded", description: "Parent IP image loaded successfully." });
+                        } else {
+                            toast({ title: "No Image Found", description: "Could not find image in IP metadata.", variant: "destructive" });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch parent IP", e);
+                    toast({ title: "Load Failed", description: "Could not fetch parent IP data.", variant: "destructive" });
+                }
+            };
+            fetchParentIP();
+        }
+    }, [parentIpId]);
+
     const handleOpenRegister = () => {
         if (!isConnected) {
             toast({ title: "Wallet not connected", description: "Please connect wallet to register IP.", variant: "destructive" });
@@ -260,6 +329,8 @@ function CreateContent() {
                 imageUrl={imageToRegister}
                 prompt=""
                 labels={labels}
+                parentIpId={parentIpId || undefined}
+                parentLicenseTermsId={parentLicenseTermsId || undefined}
             />
         </div>
     );
