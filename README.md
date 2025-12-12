@@ -97,13 +97,13 @@ Nobody else is doing this — and Story Protocol makes it possible.
 
 ---
 
-## 🧰 Developer? Fork & Build
+<!-- ## 🧰 Developer? Fork & Build
 
 ```bash
 git clone https://github.com/manjeetsharma0796/LabelNexus
 cd labelnexus
 bun install                 # or npm
 cp .env.example .env        # add GEMINI_API_KEY + WALLET_CONNECT_ID + PINATA_JWT
-bun run dev                 # http://localhost:3000
-```
+bun run dev                 # http://localhost:3000 -->
+<!-- ``` -->
 Stack: Next.js 16 | TypeScript | Tailwind | shadcn/ui | Wagmi | Story SDK | Pinata | Gemini 2.0 Flash
