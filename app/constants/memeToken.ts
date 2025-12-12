@@ -1,4 +1,4 @@
-export const MEME_TOKEN_ADDRESS = "0x548709a2e4ff648378Ed485a02E4BB2f4378EBA3";
+export const MEME_TOKEN_ADDRESS = "0xA169D950bdAb93Ae8c168f87a207A1120dB5E1cF"; // LabelNexus Token
 
 export const MEME_TOKEN_ABI = [
     {
